@@ -60,7 +60,7 @@ def generate(cname):
         #'log_driver': cattrs['HostConfig']['LogConfig']['Type'],
         #'log_opt': cattrs['HostConfig']['LogConfig']['Config'],
         'logging': {'driver': cattrs['HostConfig']['LogConfig']['Type'], 'options': cattrs['HostConfig']['LogConfig']['Config']},
-        'networks': {x for x in cattrs['NetworkSettings']['Networks'].keys() if x != 'bridge'},
+        'networks': {x: None for x in cattrs['NetworkSettings']['Networks'].keys() if x != 'bridge'},
         'security_opt': cattrs['HostConfig']['SecurityOpt'],
         'ulimits': cattrs['HostConfig']['Ulimits'],
         'volumes': cattrs['HostConfig']['Binds'],
@@ -83,6 +83,11 @@ def generate(cname):
     # Populate devices key if device values are present
     if cattrs['HostConfig']['Devices']:
         values['devices'] = [x['PathOnHost']+':'+x['PathInContainer'] for x in cattrs['HostConfig']['Devices']]
+
+    # Populate the IPv4Address values if configured
+    for network in values['networks']:
+        if cattrs['NetworkSettings']['Networks'][network]['IPAMConfig']:
+            values['networks'][network] = {'ipv4_address': cattrs['NetworkSettings']['Networks'][network]['IPAMConfig']['IPv4Address']}
     
     networks = {}
     if values['networks'] == set():
